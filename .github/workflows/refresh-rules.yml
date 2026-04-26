@@ -1,0 +1,39 @@
+name: refresh-rules-cache
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run scraper
+        run: npm run scrape
+
+      - name: Open PR if cache changed
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: chore/refresh-rules-cache
+          commit-message: "chore: refresh rules cache"
+          title: "chore: refresh rules cache"
+          body: |
+            Weekly automated refresh of `api/rules-cache.json` from swcombine.com.
+
+            If this PR was opened, the live rules content has changed since the last cache. Review the diff and merge to ship the update.
+          labels: automated, rules-cache
+          add-paths: api/rules-cache.json

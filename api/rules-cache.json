@@ -1,0 +1,6 @@
+{
+  "_note": "Run `npm run scrape` from your local machine to populate this file with the latest rules content from swcombine.com. Until then, the proxy falls back to a live fetch (which may be blocked by Vercel egress) and then to web_search.",
+  "generatedAt": null,
+  "sections": {},
+  "failures": []
+}
