@@ -1,20 +1,30 @@
 # SWCombine Rules Advisor
 
-AI chat advisor for the rules of [Star Wars Combine](https://www.swcombine.com), a browser-based Star Wars MMORPG. Anyone can use it on the public URL — there's no login and no per-user key. The Anthropic API key never reaches the browser; all model calls go through a small serverless proxy that also rate-limits abuse.
+AI chat advisor for the rules of [Star Wars Combine](https://www.swcombine.com), a browser-based Star Wars MMORPG. The Anthropic API key never reaches the browser; all model calls go through a small serverless proxy.
+
+## Quick start (live URL in ~5 minutes)
+
+You only need two free accounts beyond GitHub: **Vercel** (for hosting the proxy) and **Anthropic** (for the model).
+
+1. **Get an Anthropic API key.** Sign in at <https://console.anthropic.com>, create a key, and set a small monthly spend cap as a backstop.
+2. **Sign in to Vercel with GitHub.** <https://vercel.com> → "Continue with GitHub". Free hobby tier is fine.
+3. **Import the repo.** Vercel dashboard → "Add New… → Project" → pick `swc-rules-advisor`. Don't change any defaults.
+4. **Add the env var.** Project Settings → Environment Variables → add `ANTHROPIC_API_KEY` (paste your key, enable for Production + Preview + Development).
+5. **Deploy.** Vercel gives you a public `*.vercel.app` URL. From here on, every `git push` to `main` redeploys automatically — you don't touch Vercel again.
+
+That's it. The site is live, anyone can use it, and your key stays in Vercel's env (never in the repo, never in the bundle).
 
 ## Stack
 
 - **Frontend:** React 18 + Vite
 - **Backend:** Vercel serverless function (`api/chat.js`)
-- **Rate limiting:** Upstash Redis (free tier, sliding window)
 - **Model:** Anthropic API (`claude-sonnet-4-20250514`) with the `web_search_20250305` tool for live rules lookups
+- **Rate limiting (optional):** Upstash Redis — see [Hardening](#hardening) below
 
 ## How it works
 
 ```
 browser  ──POST /api/chat──▶  Vercel function
-                                 │
-                                 ├─▶ Upstash Redis (per-IP rate-limit check)
                                  │
                                  └─▶ Anthropic /v1/messages  ──▶  response
                                                                      │
@@ -26,15 +36,10 @@ The proxy fixes the `model`, system prompt, `max_tokens`, and `tools` list serve
 ## Local development
 
 1. `npm install`
-2. Create an Upstash Redis database (free tier) at <https://console.upstash.com> and copy the **REST URL** and **REST token**.
-3. Get an Anthropic API key from the [Anthropic Console](https://console.anthropic.com).
-4. `cp .env.example .env`, then fill in:
-   - `ANTHROPIC_API_KEY`
-   - `UPSTASH_REDIS_REST_URL`
-   - `UPSTASH_REDIS_REST_TOKEN`
-5. Run `npx vercel dev` (first run will prompt you to link the project).
+2. `cp .env.example .env`, paste your `ANTHROPIC_API_KEY`.
+3. Run `npx vercel dev` (first run will prompt you to link the project).
 
-> **Use `vercel dev`, not `npm run dev`.** Only `vercel dev` runs the Vite frontend AND the `/api/chat` serverless function on the same port. Plain `npm run dev` will load the UI fine, but every chat request will 404 because there's no backend.
+> **Use `vercel dev`, not `npm run dev`.** Only `vercel dev` runs the Vite frontend AND the `/api/chat` serverless function on the same port. Plain `npm run dev` loads the UI fine, but every chat request will 404 because there's no backend.
 
 ## Build
 
@@ -43,23 +48,27 @@ npm run build
 npm run preview
 ```
 
-`npm run preview` only serves the static bundle — it does **not** run the serverless function, so chat won't work there either. Use it just to inspect the built frontend.
+`npm run preview` only serves the static bundle — it doesn't run the serverless function, so chat won't work there either. Use it just to inspect the built frontend.
 
-## Deploy to Vercel
+## Hardening
 
-1. Push the repo to GitHub.
-2. Import it into Vercel.
-3. In **Project Settings → Environment Variables**, add all three:
-   - `ANTHROPIC_API_KEY`
+These are optional and can be added later, once you decide to share the URL widely.
+
+### Rate limiting (Upstash Redis)
+
+Without a rate limit, anyone with the URL can spam `/api/chat` and burn through your Anthropic budget. The proxy already has the code for per-IP rate limiting; it just no-ops when the env vars are absent.
+
+To enable:
+
+1. Create a free Upstash Redis database at <https://console.upstash.com>, copy the REST URL and REST token.
+2. In Vercel → Project Settings → Environment Variables, add:
    - `UPSTASH_REDIS_REST_URL`
    - `UPSTASH_REDIS_REST_TOKEN`
+3. Redeploy. Default is **10 requests per hour per IP** — tune `RATE_LIMIT_PER_HOUR` in `api/chat.js`.
 
-   Make sure each one is enabled for **Production**, **Preview**, AND **Development**.
-4. Deploy. The resulting public URL is what to share.
+### Anthropic spend cap
 
-## Rate limiting
-
-Default is **10 requests per hour per IP**, enforced via an Upstash sliding window. Change the `RATE_LIMIT_PER_HOUR` constant near the top of `api/chat.js` to tune it. As a backstop against runaway cost (compromised IPs, bots rotating addresses, etc.), set a monthly spend cap on your Anthropic account.
+Set a monthly usage limit on your Anthropic key in the console. Belt-and-suspenders alongside any rate limit, and the only protection if you skip Upstash entirely.
 
 ## Notes
 
