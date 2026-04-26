@@ -118,9 +118,22 @@ function stripHtmlToText(html) {
     .trim();
 }
 
+function looksLikeAnubisChallenge(text) {
+  if (!text) return false;
+  return (
+    text.includes("Making sure you're not a bot") ||
+    text.includes("Protected by Anubis") ||
+    text.includes("Proof-of-Work scheme")
+  );
+}
+
 function getCachedSectionText(label) {
   const entry = rulesCache?.sections?.[label];
   if (!entry || typeof entry.text !== "string" || entry.text.length < 200) return "";
+  if (looksLikeAnubisChallenge(entry.text)) {
+    console.warn("cache entry for", label, "looks like an Anubis challenge — treating as miss");
+    return "";
+  }
   return entry.text.slice(0, SECTION_TEXT_MAX_CHARS);
 }
 
@@ -141,6 +154,10 @@ async function fetchSectionTextLive(url) {
     }
     const html = await res.text();
     const text = stripHtmlToText(html);
+    if (looksLikeAnubisChallenge(text)) {
+      console.warn("section live-fetch hit Anubis challenge:", url);
+      return "";
+    }
     if (text.length < 200) {
       console.warn("section live-fetch suspiciously short:", url, text.length);
     }
