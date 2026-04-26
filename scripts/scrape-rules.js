@@ -215,9 +215,12 @@ async function passAnubisChallenge(challengeHtml, originalUrl) {
   const serializedChallenge =
     typeof challenge === "string" ? challenge : JSON.stringify(challenge);
   console.log(`    Anubis challenge: algorithm=${algorithm}, difficulty=${difficulty}`);
-  console.log(`    serialized challenge head: ${serializedChallenge.slice(0, 120).replace(/\s+/g, " ")}...`);
+  // Dump the FULL data block so we can see every field — previous truncation
+  // hid whether `challenge` has more than {issuedAt, metadata}.
+  console.log(`    FULL data: ${JSON.stringify(data)}`);
+  console.log(`    FULL serialized challenge for hashing: ${serializedChallenge}`);
   const { nonce, hash, elapsedMs } = solvePoW(serializedChallenge, difficulty);
-  console.log(`    PoW solved in ${elapsedMs}ms (nonce=${nonce}, hash=${hash.slice(0, 16)}...)`);
+  console.log(`    PoW solved in ${elapsedMs}ms (nonce=${nonce}, hash=${hash})`);
   console.log(`    cookies before verify: ${buildCookieHeader().slice(0, 200) || "(none)"}`);
 
   const verifyUrl = new URL("/.within.website/x/cmd/anubis/api/pass-challenge", originalUrl);
@@ -225,18 +228,27 @@ async function passAnubisChallenge(challengeHtml, originalUrl) {
   verifyUrl.searchParams.set("nonce", String(nonce));
   verifyUrl.searchParams.set("redir", originalUrl);
   verifyUrl.searchParams.set("elapsedTime", String(elapsedMs));
+  console.log(`    verify URL: ${verifyUrl.toString()}`);
 
   const verifyRes = await httpGet(verifyUrl, { redirect: "manual" });
   console.log(`    verify status=${verifyRes.status}`);
-  for (const h of ["location", "content-type", "x-anubis-version", "x-anubis-status"]) {
-    const v = verifyRes.headers.get(h);
-    if (v) console.log(`    verify header ${h}=${v}`);
+  // Log ALL headers verbatim to catch any X-Anubis-* hint we'd otherwise miss.
+  for (const [k, v] of verifyRes.headers.entries()) {
+    if (k === "set-cookie") continue; // covered separately
+    console.log(`    verify header ${k}=${v.slice(0, 200)}`);
   }
   console.log(`    cookies after verify: ${buildCookieHeader().slice(0, 200) || "(none)"}`);
 
   if (verifyRes.status >= 400) {
     const body = await verifyRes.text().catch(() => "");
-    throw new Error(`verify rejected with HTTP ${verifyRes.status}. Body head: ${body.slice(0, 300)}`);
+    // Strip HTML and collapse whitespace — the meaningful error message is
+    // buried under stylesheet links, fonts, etc.
+    const text = stripHtmlToText(body).replace(/\s+/g, " ").trim();
+    // Show the first 1500 chars of meaningful text — Anubis error pages
+    // typically say something like "expected hash X but got Y".
+    throw new Error(
+      `verify rejected with HTTP ${verifyRes.status}. Stripped body (1500 chars): ${text.slice(0, 1500)}`,
+    );
   }
 }
 
