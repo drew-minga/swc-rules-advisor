@@ -137,10 +137,64 @@ function solvePoW(serializedChallenge, difficulty) {
   );
 }
 
+// ----- Real cookie jar -----
+// Anubis sets a `techaro.lol-anubis-cookie-verification` cookie on the INITIAL
+// challenge page response. The verify endpoint looks that cookie up to know
+// which challenge we're proving against. Without it, verify returns HTTP 500
+// "Oh noes!" and clears the auth cookies. So we need a real jar that captures
+// Set-Cookie from every response and includes them on every subsequent
+// request — not just the verify response.
+const cookieJar = new Map(); // name -> value (empty string == cleared)
+
+function readSetCookies(res) {
+  return typeof res.headers.getSetCookie === "function"
+    ? res.headers.getSetCookie()
+    : (res.headers.raw?.()["set-cookie"] || []);
+}
+
+function updateCookieJar(setCookies) {
+  for (const c of setCookies) {
+    const firstPart = c.split(";")[0];
+    const eq = firstPart.indexOf("=");
+    if (eq <= 0) continue;
+    const name = firstPart.slice(0, eq).trim();
+    const value = firstPart.slice(eq + 1).trim();
+    cookieJar.set(name, value);
+  }
+}
+
+function buildCookieHeader() {
+  const parts = [];
+  for (const [name, value] of cookieJar) {
+    if (!value) continue; // skip cleared cookies (Max-Age=0)
+    parts.push(`${name}=${value}`);
+  }
+  return parts.join("; ");
+}
+
+async function httpGet(url, { redirect = "follow", extraHeaders = {} } = {}) {
+  const headers = {
+    "User-Agent": USER_AGENT,
+    Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+    ...extraHeaders,
+  };
+  const cookies = buildCookieHeader();
+  if (cookies) headers.Cookie = cookies;
+  const res = await fetch(url, {
+    headers,
+    redirect,
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+  });
+  updateCookieJar(readSetCookies(res));
+  return res;
+}
+
 // ANUBIS PROTOCOL ASSUMPTION 3: the verify endpoint is at
 // /.within.website/x/cmd/anubis/api/pass-challenge and accepts query
-// parameters {response, nonce, redir, elapsedTime}. On success it sets a
-// cookie whose name contains "anubis".
+// parameters {response, nonce, redir, elapsedTime}. On success it sets the
+// real auth cookie (and clears the verification cookie). The cookie jar
+// captures all of that automatically.
 async function passAnubisChallenge(challengeHtml, originalUrl) {
   const data = extractAnubisChallenge(challengeHtml);
   if (!data) {
@@ -164,6 +218,7 @@ async function passAnubisChallenge(challengeHtml, originalUrl) {
   console.log(`    serialized challenge head: ${serializedChallenge.slice(0, 120).replace(/\s+/g, " ")}...`);
   const { nonce, hash, elapsedMs } = solvePoW(serializedChallenge, difficulty);
   console.log(`    PoW solved in ${elapsedMs}ms (nonce=${nonce}, hash=${hash.slice(0, 16)}...)`);
+  console.log(`    cookies before verify: ${buildCookieHeader().slice(0, 200) || "(none)"}`);
 
   const verifyUrl = new URL("/.within.website/x/cmd/anubis/api/pass-challenge", originalUrl);
   verifyUrl.searchParams.set("response", hash);
@@ -171,75 +226,32 @@ async function passAnubisChallenge(challengeHtml, originalUrl) {
   verifyUrl.searchParams.set("redir", originalUrl);
   verifyUrl.searchParams.set("elapsedTime", String(elapsedMs));
 
-  const verifyRes = await fetch(verifyUrl, {
-    headers: { "User-Agent": USER_AGENT, Accept: "text/html,application/json" },
-    redirect: "manual",
-    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-  });
-
-  // ---- Maximum diagnostics: log the full verify response ----
+  const verifyRes = await httpGet(verifyUrl, { redirect: "manual" });
   console.log(`    verify status=${verifyRes.status}`);
-  const interestingHeaders = ["location", "content-type", "content-length", "x-anubis-version", "x-anubis-status"];
-  for (const h of interestingHeaders) {
+  for (const h of ["location", "content-type", "x-anubis-version", "x-anubis-status"]) {
     const v = verifyRes.headers.get(h);
     if (v) console.log(`    verify header ${h}=${v}`);
   }
-
-  // Node 18+ supports Headers.getSetCookie(); fall back to .raw() if needed.
-  const setCookies =
-    typeof verifyRes.headers.getSetCookie === "function"
-      ? verifyRes.headers.getSetCookie()
-      : (verifyRes.headers.raw?.()["set-cookie"] || []);
-  console.log(`    verify set-cookie count=${setCookies.length}`);
-  for (const c of setCookies) {
-    console.log(`      raw set-cookie: ${c.slice(0, 250)}`);
-  }
+  console.log(`    cookies after verify: ${buildCookieHeader().slice(0, 200) || "(none)"}`);
 
   if (verifyRes.status >= 400) {
     const body = await verifyRes.text().catch(() => "");
     throw new Error(`verify rejected with HTTP ${verifyRes.status}. Body head: ${body.slice(0, 300)}`);
   }
-  if (setCookies.length === 0) {
-    const body = await verifyRes.text().catch(() => "");
-    throw new Error(`verify returned no Set-Cookie (status ${verifyRes.status}). Body head: ${body.slice(0, 300)}`);
-  }
-
-  // Use ALL cookies from the verify response, joined for the Cookie header.
-  // Previously only took the first one matching /anubis/i, which may have
-  // missed companion cookies (session id, csrf, etc.).
-  const cookieHeader = setCookies.map((c) => c.split(";")[0]).join("; ");
-  return cookieHeader;
-}
-
-let anubisCookie = null;
-
-async function fetchHtml(url, opts = {}) {
-  const headers = {
-    "User-Agent": USER_AGENT,
-    Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "en-US,en;q=0.9",
-  };
-  if (anubisCookie) headers.Cookie = anubisCookie;
-  const res = await fetch(url, {
-    headers,
-    redirect: "follow",
-    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-  });
-  if (opts.captureStatus) opts.captureStatus.value = res.status;
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return await res.text();
 }
 
 async function fetchSection(section) {
-  let html = await fetchHtml(section.url);
+  let res = await httpGet(section.url);
+  let html = await res.text();
+  console.log(`    initial GET status=${res.status}, cookies now: ${buildCookieHeader().slice(0, 150) || "(none)"}`);
+
   if (looksLikeAnubisChallenge(html)) {
     console.log(`    hit Anubis challenge, solving...`);
-    anubisCookie = await passAnubisChallenge(html, section.url);
-    console.log(`    cookie header for retry: ${anubisCookie.slice(0, 200)}`);
+    await passAnubisChallenge(html, section.url);
 
-    const statusBox = { value: 0 };
-    html = await fetchHtml(section.url, { captureStatus: statusBox });
-    console.log(`    retry status=${statusBox.value}`);
+    res = await httpGet(section.url);
+    console.log(`    retry status=${res.status}`);
+    html = await res.text();
 
     if (looksLikeAnubisChallenge(stripHtmlToText(html))) {
       const bodyPreview = stripHtmlToText(html).slice(0, 400).replace(/\s+/g, " ");
