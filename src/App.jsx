@@ -28,17 +28,6 @@ const RULES_SECTIONS = [
   { label: "Creatures", url: "https://www.swcombine.com/rules/?Creatures" },
 ];
 
-const SYSTEM_PROMPT = `You are a knowledgeable assistant for the Star Wars Combine (swcombine.com), a browser-based Star Wars MMORPG.
-
-You have access to a web search tool. When a user asks a question:
-1. Search for the relevant SWCombine rules page(s) using queries like "swcombine rules [topic]" or "site:swcombine.com [topic]"
-2. Read the results carefully
-3. Give a clear, accurate, and detailed answer based on the rules
-
-Always be specific and cite which rules section your answer comes from. If a rule is complex, break it down step by step. If you are uncertain, say so and suggest where the user can verify.
-
-Keep answers focused and practical — players want to know what they can DO, not just theory.`;
-
 const StarField = () => {
   const stars = useRef(
     Array.from({ length: 80 }, (_, i) => ({
@@ -104,39 +93,42 @@ export default function SWCombineAdvisor() {
     if (textareaRef.current) textareaRef.current.style.height = "auto";
     setLoading(true);
 
-    const contextNote = selectedSection
-      ? `The user is focused on the "${selectedSection.label}" rules section (${selectedSection.url}). Prioritize searching that section first.`
-      : "Search broadly across swcombine.com rules.";
-
-    const apiMessages = history.map((m) => ({ role: m.role, content: m.content }));
-    apiMessages[apiMessages.length - 1].content = `${text}\n\n[Context: ${contextNote}]`;
-
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": import.meta.env.VITE_ANTHROPIC_KEY,
-          "anthropic-version": "2023-06-01",
-          "anthropic-dangerous-direct-browser-access": "true",
         },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          system: SYSTEM_PROMPT,
-          tools: [{ type: "web_search_20250305", name: "web_search" }],
-          messages: apiMessages,
-        }),
+        body: JSON.stringify({ messages: history, section: selectedSection }),
       });
 
-      const data = await res.json();
-      let reply = "";
-      if (data.content) {
-        for (const block of data.content) {
-          if (block.type === "text") reply += block.text;
-        }
+      const data = await res.json().catch(() => ({}));
+
+      if (res.status === 429) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: data.error || "Rate limit reached — please wait a moment and try again.",
+          },
+        ]);
+        return;
       }
-      if (!reply) reply = "I wasn't able to retrieve an answer. Please try rephrasing your question.";
+
+      if (!res.ok) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content:
+              data.error || "⚠️ The rules database returned an error. Please try again.",
+          },
+        ]);
+        return;
+      }
+
+      const reply =
+        data.reply || "I wasn't able to retrieve an answer. Please try rephrasing your question.";
       setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
     } catch {
       setMessages((prev) => [
