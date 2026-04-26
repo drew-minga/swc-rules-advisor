@@ -177,24 +177,43 @@ async function passAnubisChallenge(challengeHtml, originalUrl) {
     signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
   });
 
+  // ---- Maximum diagnostics: log the full verify response ----
+  console.log(`    verify status=${verifyRes.status}`);
+  const interestingHeaders = ["location", "content-type", "content-length", "x-anubis-version", "x-anubis-status"];
+  for (const h of interestingHeaders) {
+    const v = verifyRes.headers.get(h);
+    if (v) console.log(`    verify header ${h}=${v}`);
+  }
+
   // Node 18+ supports Headers.getSetCookie(); fall back to .raw() if needed.
   const setCookies =
     typeof verifyRes.headers.getSetCookie === "function"
       ? verifyRes.headers.getSetCookie()
       : (verifyRes.headers.raw?.()["set-cookie"] || []);
-  const anubisCookie = setCookies.find((c) => /anubis/i.test(c));
-  if (!anubisCookie) {
-    const bodyPreview = await verifyRes.text().then((t) => t.slice(0, 300)).catch(() => "<unreadable>");
-    throw new Error(
-      `Anubis verify did not return a cookie (status ${verifyRes.status}, set-cookie: ${JSON.stringify(setCookies).slice(0, 200)}, body: ${bodyPreview})`,
-    );
+  console.log(`    verify set-cookie count=${setCookies.length}`);
+  for (const c of setCookies) {
+    console.log(`      raw set-cookie: ${c.slice(0, 250)}`);
   }
-  return anubisCookie.split(";")[0]; // "name=value"
+
+  if (verifyRes.status >= 400) {
+    const body = await verifyRes.text().catch(() => "");
+    throw new Error(`verify rejected with HTTP ${verifyRes.status}. Body head: ${body.slice(0, 300)}`);
+  }
+  if (setCookies.length === 0) {
+    const body = await verifyRes.text().catch(() => "");
+    throw new Error(`verify returned no Set-Cookie (status ${verifyRes.status}). Body head: ${body.slice(0, 300)}`);
+  }
+
+  // Use ALL cookies from the verify response, joined for the Cookie header.
+  // Previously only took the first one matching /anubis/i, which may have
+  // missed companion cookies (session id, csrf, etc.).
+  const cookieHeader = setCookies.map((c) => c.split(";")[0]).join("; ");
+  return cookieHeader;
 }
 
 let anubisCookie = null;
 
-async function fetchHtml(url) {
+async function fetchHtml(url, opts = {}) {
   const headers = {
     "User-Agent": USER_AGENT,
     Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -206,6 +225,7 @@ async function fetchHtml(url) {
     redirect: "follow",
     signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
   });
+  if (opts.captureStatus) opts.captureStatus.value = res.status;
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return await res.text();
 }
@@ -215,8 +235,16 @@ async function fetchSection(section) {
   if (looksLikeAnubisChallenge(html)) {
     console.log(`    hit Anubis challenge, solving...`);
     anubisCookie = await passAnubisChallenge(html, section.url);
-    console.log(`    got Anubis cookie: ${anubisCookie.split("=")[0]}=...`);
-    html = await fetchHtml(section.url);
+    console.log(`    cookie header for retry: ${anubisCookie.slice(0, 200)}`);
+
+    const statusBox = { value: 0 };
+    html = await fetchHtml(section.url, { captureStatus: statusBox });
+    console.log(`    retry status=${statusBox.value}`);
+
+    if (looksLikeAnubisChallenge(stripHtmlToText(html))) {
+      const bodyPreview = stripHtmlToText(html).slice(0, 400).replace(/\s+/g, " ");
+      console.log(`    retry body still Anubis. Preview: ${bodyPreview}`);
+    }
   }
   const text = stripHtmlToText(html);
 
