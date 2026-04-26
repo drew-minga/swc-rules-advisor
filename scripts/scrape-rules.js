@@ -112,17 +112,20 @@ function extractAnubisChallenge(html) {
   return null;
 }
 
-// ANUBIS PROTOCOL ASSUMPTION 2: difficulty is the number of leading zero hex
-// characters required in sha256(challenge + nonce). Default 4 if unspecified.
-// Hash input is concatenation as ASCII; output checked as lowercase hex.
-function solvePoW(challenge, difficulty) {
+// ANUBIS PROTOCOL ASSUMPTION 2 (revised after first run): the hash input is
+// JSON.stringify(challenge_object) + nonce, where challenge_object is the
+// "challenge" field of the page's data block (an object containing issuedAt
+// + metadata). Difficulty is leading zero hex chars in the SHA-256 hex
+// digest. Algorithm "fast" = plain SHA-256 (the only algorithm we currently
+// handle; if Anubis adds others, branch here).
+function solvePoW(serializedChallenge, difficulty) {
   const target = "0".repeat(difficulty);
   const startTime = Date.now();
   let nonce = 0;
   while (nonce < POW_MAX_NONCES) {
     const hash = crypto
       .createHash("sha256")
-      .update(challenge + nonce)
+      .update(serializedChallenge + nonce)
       .digest("hex");
     if (hash.startsWith(target)) {
       return { nonce, hash, elapsedMs: Date.now() - startTime };
@@ -143,13 +146,23 @@ async function passAnubisChallenge(challengeHtml, originalUrl) {
   if (!data) {
     throw new Error("Anubis challenge detected but couldn't extract challenge JSON from the page");
   }
-  const challenge = data.challenge ?? data.seed ?? data.id ?? data.token;
+  const algorithm = data.rules?.algorithm ?? "fast";
   const difficulty = data.rules?.difficulty ?? data.difficulty ?? 4;
-  if (typeof challenge !== "string") {
-    throw new Error(`extracted challenge JSON is missing a usable challenge string: ${JSON.stringify(data).slice(0, 200)}`);
+  const challenge = data.challenge ?? data.seed ?? data.id ?? data.token;
+  if (challenge == null) {
+    throw new Error(`extracted challenge JSON has no "challenge" field: ${JSON.stringify(data).slice(0, 200)}`);
   }
-  console.log(`    Anubis challenge: difficulty=${difficulty}, challenge=${challenge.slice(0, 20)}...`);
-  const { nonce, hash, elapsedMs } = solvePoW(challenge, difficulty);
+  if (algorithm !== "fast") {
+    throw new Error(`Anubis algorithm "${algorithm}" is not implemented; only "fast" (SHA-256) is supported`);
+  }
+  // The challenge can be either a string (older Anubis) or an object
+  // {issuedAt, metadata} (current Anubis as of v1.24). Hash input is the
+  // serialized form + nonce.
+  const serializedChallenge =
+    typeof challenge === "string" ? challenge : JSON.stringify(challenge);
+  console.log(`    Anubis challenge: algorithm=${algorithm}, difficulty=${difficulty}`);
+  console.log(`    serialized challenge head: ${serializedChallenge.slice(0, 120).replace(/\s+/g, " ")}...`);
+  const { nonce, hash, elapsedMs } = solvePoW(serializedChallenge, difficulty);
   console.log(`    PoW solved in ${elapsedMs}ms (nonce=${nonce}, hash=${hash.slice(0, 16)}...)`);
 
   const verifyUrl = new URL("/.within.website/x/cmd/anubis/api/pass-challenge", originalUrl);
@@ -171,8 +184,9 @@ async function passAnubisChallenge(challengeHtml, originalUrl) {
       : (verifyRes.headers.raw?.()["set-cookie"] || []);
   const anubisCookie = setCookies.find((c) => /anubis/i.test(c));
   if (!anubisCookie) {
+    const bodyPreview = await verifyRes.text().then((t) => t.slice(0, 300)).catch(() => "<unreadable>");
     throw new Error(
-      `Anubis verify did not return a cookie (status ${verifyRes.status}, set-cookie: ${JSON.stringify(setCookies).slice(0, 200)})`,
+      `Anubis verify did not return a cookie (status ${verifyRes.status}, set-cookie: ${JSON.stringify(setCookies).slice(0, 200)}, body: ${bodyPreview})`,
     );
   }
   return anubisCookie.split(";")[0]; // "name=value"
