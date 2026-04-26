@@ -1,0 +1,29 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+
+      - name: Verify no secrets leaked into client bundle
+        run: |
+          if grep -ril "sk-ant\|VITE_ANTHROPIC\|anthropic-dangerous\|UPSTASH_REDIS_REST_TOKEN" dist/; then
+            echo "::error::Secret-shaped string found in dist/ — the client bundle must never contain API keys."
+            exit 1
+          fi
+          echo "OK: no secret-shaped strings in dist/"
