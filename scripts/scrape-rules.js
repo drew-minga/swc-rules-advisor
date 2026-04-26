@@ -68,16 +68,14 @@ function stripHtmlToText(html) {
     .trim();
 }
 
-async function fetchSection(page, section) {
-  await page.goto(section.url, {
-    waitUntil: "domcontentloaded",
-    timeout: NAV_TIMEOUT_MS,
-  });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function loadAndExtract(page, url) {
+  await page.goto(url, { waitUntil: "load", timeout: NAV_TIMEOUT_MS });
 
   // If we landed on the Anubis interstitial, wait for its in-page JS to solve
-  // the PoW and navigate us to the real rules page. Anubis swaps the document
-  // body once the auth cookie is set, so we poll for the canary to disappear.
-  let bodyText = await page.evaluate(() => document.body?.innerText ?? "");
+  // the PoW and hand off to the real rules page.
+  const bodyText = await page.evaluate(() => document.body?.innerText ?? "");
   if (looksLikeAnubisChallenge(bodyText)) {
     console.log(`    on Anubis interstitial, waiting for browser to solve...`);
     await page.waitForFunction(
@@ -88,30 +86,49 @@ async function fetchSection(page, section) {
       ANUBIS_CANARY_PATTERNS,
       { timeout: ANUBIS_SOLVE_TIMEOUT_MS },
     );
-    // Once Anubis hands off, give the real page a beat to finish loading.
-    await page
-      .waitForLoadState("networkidle", { timeout: NAV_TIMEOUT_MS })
-      .catch(() => {});
+    await page.waitForLoadState("load", { timeout: NAV_TIMEOUT_MS });
   }
+
+  // Wait for the rules body to actually render. The site chrome (nav, member
+  // counts, server clock) is ~1300 chars on its own; full pages are 2700+. Poll
+  // until innerText grows past MIN_SECTION_LENGTH or we time out.
+  await page
+    .waitForFunction(
+      (min) => (document.body?.innerText?.length ?? 0) >= min,
+      MIN_SECTION_LENGTH,
+      { timeout: NAV_TIMEOUT_MS },
+    )
+    .catch(() => {});
 
   const html = await page.content();
-  const text = stripHtmlToText(html);
-
-  if (looksLikeAnubisChallenge(text)) {
-    throw new Error("still on Anubis page after solve window — selector or timing assumption is wrong");
-  }
-  if (text.length < MIN_SECTION_LENGTH) {
-    const preview = text.slice(0, 200).replace(/\s+/g, " ");
-    throw new Error(`response too short (${text.length} chars). Preview: "${preview}"`);
-  }
-  if (!looksLikeRealRulesContent(text)) {
-    const preview = text.slice(0, 200).replace(/\s+/g, " ");
-    throw new Error(`response missing SWC markers. Preview: "${preview}"`);
-  }
-  return text.slice(0, SECTION_TEXT_MAX_CHARS);
+  return stripHtmlToText(html);
 }
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+async function fetchSection(page, section) {
+  const MAX_ATTEMPTS = 2;
+  let lastErr;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const text = await loadAndExtract(page, section.url);
+
+    if (looksLikeAnubisChallenge(text)) {
+      lastErr = new Error("still on Anubis page after solve window");
+    } else if (text.length < MIN_SECTION_LENGTH) {
+      const preview = text.slice(0, 200).replace(/\s+/g, " ");
+      lastErr = new Error(`response too short (${text.length} chars). Preview: "${preview}"`);
+    } else if (!looksLikeRealRulesContent(text)) {
+      const preview = text.slice(0, 200).replace(/\s+/g, " ");
+      lastErr = new Error(`response missing SWC markers. Preview: "${preview}"`);
+    } else {
+      return text.slice(0, SECTION_TEXT_MAX_CHARS);
+    }
+
+    if (attempt < MAX_ATTEMPTS) {
+      console.log(`    attempt ${attempt} failed (${lastErr.message.slice(0, 80)}), retrying...`);
+      await sleep(REQUEST_DELAY_MS);
+    }
+  }
+  throw lastErr;
+}
 
 async function main() {
   const browser = await chromium.launch({ headless: true });
