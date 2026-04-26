@@ -70,6 +70,21 @@ function stripHtmlToText(html) {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+async function dismissCookieBanner(page) {
+  // The site shows a EU cookie-consent banner ("I Understand") on the first
+  // visit. Until it's dismissed, body content doesn't fully render. Clicking
+  // it once sets the consent cookie at the BrowserContext level, so the
+  // banner doesn't return for subsequent sections in the same run.
+  const button = page
+    .locator('button:has-text("I Understand"), a:has-text("I Understand")')
+    .first();
+  if (await button.isVisible({ timeout: 1000 }).catch(() => false)) {
+    console.log(`    dismissing cookie consent banner...`);
+    await button.click({ timeout: 5000 }).catch(() => {});
+    await page.waitForLoadState("load", { timeout: NAV_TIMEOUT_MS }).catch(() => {});
+  }
+}
+
 async function loadAndExtract(page, url) {
   await page.goto(url, { waitUntil: "load", timeout: NAV_TIMEOUT_MS });
 
@@ -88,6 +103,8 @@ async function loadAndExtract(page, url) {
     );
     await page.waitForLoadState("load", { timeout: NAV_TIMEOUT_MS });
   }
+
+  await dismissCookieBanner(page);
 
   // Wait for the rules body to actually render. The site chrome (nav, member
   // counts, server clock) is ~1300 chars on its own; full pages are 2700+. Poll
