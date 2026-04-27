@@ -12,6 +12,7 @@ You have two information sources:
 WHEN YOU CALL web_search:
 - Always prefix the query with "site:swcombine.com" so results stay on the SWC domain. Do NOT issue bare queries like "force alignment rules" — those return KOTOR/SWTOR/other-game results that have nothing to do with SWC.
 - If you have a specific URL to fetch (from the section context or from a prior search), pass that URL directly to web_search instead of searching for the topic again.
+- You have a hard budget of 3 web_search calls per turn. Use them deliberately: pick the best query the first time. If the first 1-2 searches don't surface what you need, stop searching and answer honestly that the topic isn't in the rules you can access — do NOT keep searching with minor query rewordings.
 
 ANTI-HALLUCINATION RULES (follow these strictly — these are not suggestions):
 
@@ -287,7 +288,7 @@ export default async function handler(req, res) {
         max_tokens: ANTHROPIC_MAX_TOKENS,
         temperature: ANTHROPIC_TEMPERATURE,
         system: SYSTEM_PROMPT,
-        tools: [{ type: "web_search_20250305", name: "web_search" }],
+        tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 3 }],
         messages: apiMessages,
       }),
     });
