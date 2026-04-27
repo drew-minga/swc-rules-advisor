@@ -37,4 +37,18 @@ jobs:
 
             Lists every `?…` link found on https://www.swcombine.com/rules/ along with its display label. The lazy-fetch routing in `api/chat.js` consumes this file to map a user's question to a specific sub-page URL.
           labels: automated, rules-subsections
-          add-paths: api/rules-subsections.json
+          add-paths: src/data/rules-subsections.json
+
+      - name: Notify Discord on failure
+        if: failure()
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          if [ -z "$WEBHOOK" ]; then
+            echo "DISCORD_WEBHOOK_URL not set; skipping notification"
+            exit 0
+          fi
+          RUN_URL="https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          curl -fsSL -H "Content-Type: application/json" \
+            -d "{\"content\":\"⚠️ probe-subsections failed. See $RUN_URL\"}" \
+            "$WEBHOOK"

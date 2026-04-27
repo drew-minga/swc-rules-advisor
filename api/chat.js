@@ -1,7 +1,7 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import rulesCache from "./rules-cache.json" with { type: "json" };
-import rulesSubsections from "./rules-subsections.json" with { type: "json" };
+import rulesSubsections from "../src/data/rules-subsections.json" with { type: "json" };
 import { RULES_SECTIONS } from "../src/data/rules-sections.js";
 
 const SYSTEM_PROMPT = `You are a knowledgeable assistant for the Star Wars Combine (swcombine.com), a browser-based Star Wars MMORPG.
@@ -386,6 +386,10 @@ export default async function handler(req, res) {
     cachedSectionsAvailable: Object.keys(rulesCache?.sections || {}).length,
     cacheGeneratedAt: rulesCache?.generatedAt || null,
     rateLimitActive: Boolean(ratelimit),
+    // Anthropic usage block: input/output token counts for this turn. Useful
+    // for spotting expensive queries in browser dev tools without standing up
+    // a logging service. Includes server_tool_use counts for web_search rounds.
+    usage: data.usage || null,
   };
 
   return json(res, 200, { reply, _debug: debug });
