@@ -36,14 +36,14 @@ const StarField = () => {
   );
 };
 
+const INITIAL_GREETING = {
+  role: "assistant",
+  content:
+    "Greetings, Combine citizen. I am your Rules Advisor — ask me anything about Star Wars Combine mechanics and I'll search the official rulebooks to answer. Select a section to focus on, or just ask freely.",
+};
+
 export default function SWCombineAdvisor() {
-  const [messages, setMessages] = useState([
-    {
-      role: "assistant",
-      content:
-        "Greetings, Combine citizen. I am your Rules Advisor — ask me anything about Star Wars Combine mechanics and I'll search the official rulebooks to answer. Select a section to focus on, or just ask freely.",
-    },
-  ]);
+  const [messages, setMessages] = useState([INITIAL_GREETING]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedSection, setSelectedSection] = useState(null);
@@ -120,10 +120,14 @@ export default function SWCombineAdvisor() {
     }
   };
 
-  const clearChat = () =>
-    setMessages([
-      { role: "assistant", content: "Chat cleared. What would you like to know about Star Wars Combine rules?" },
-    ]);
+  const clearChat = () => {
+    setMessages([INITIAL_GREETING]);
+    setSelectedSection(null);
+    setSectionOpen(false);
+    setInput("");
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
+    textareaRef.current?.focus();
+  };
 
   return (
     <>
@@ -464,22 +468,23 @@ export default function SWCombineAdvisor() {
               <button
                 className="clr-btn"
                 onClick={clearChat}
-                title="Clear chat"
+                title="Reset to a new question"
                 style={{
                   background: "transparent",
-                  border: "1px solid rgba(255,255,255,0.09)",
-                  color: "rgba(255,255,255,0.28)",
+                  border: "1px solid rgba(255,255,255,0.18)",
+                  color: "rgba(255,255,255,0.55)",
                   borderRadius: 6,
-                  width: 32,
+                  padding: "0 13px",
                   height: 32,
                   cursor: "pointer",
-                  fontSize: 13,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
+                  fontSize: 11,
+                  fontFamily: "'Orbitron',monospace",
+                  letterSpacing: 1,
+                  fontWeight: 600,
+                  whiteSpace: "nowrap",
                 }}
               >
-                ✕
+                NEW QUERY
               </button>
               <button
                 className="send-btn"
