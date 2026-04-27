@@ -1,5 +1,4 @@
 export const RULES_SECTIONS = [
-  { label: "General", url: "https://www.swcombine.com/rules/?General" },
   { label: "Character Creation", url: "https://www.swcombine.com/rules/?Character_Creation" },
   { label: "Movement", url: "https://www.swcombine.com/rules/?Movement" },
   { label: "Vision", url: "https://www.swcombine.com/rules/?Vision" },
@@ -20,7 +19,6 @@ export const RULES_SECTIONS = [
   { label: "Economy", url: "https://www.swcombine.com/rules/?Economy" },
   { label: "Production", url: "https://www.swcombine.com/rules/?Production" },
   { label: "Research", url: "https://www.swcombine.com/rules/?Research" },
-  { label: "Galaxy Map", url: "https://www.swcombine.com/rules/?Galaxy_Map" },
   { label: "Planetary Grids", url: "https://www.swcombine.com/rules/?Planetary_Grids" },
   { label: "Facilities", url: "https://www.swcombine.com/rules/?Facilities" },
   { label: "Creatures", url: "https://www.swcombine.com/rules/?Creatures" },
