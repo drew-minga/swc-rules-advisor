@@ -1,6 +1,7 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import rulesCache from "./rules-cache.json" with { type: "json" };
+import rulesSubsections from "./rules-subsections.json" with { type: "json" };
 import { RULES_SECTIONS } from "../src/data/rules-sections.js";
 
 const SYSTEM_PROMPT = `You are a knowledgeable assistant for the Star Wars Combine (swcombine.com), a browser-based Star Wars MMORPG.
@@ -63,27 +64,69 @@ function tokenize(s) {
 }
 
 const SECTION_KEYWORDS = RULES_SECTIONS.map((s) => ({
-  ...s,
+  label: s.label,
+  url: s.url,
   tokens: new Set(tokenize(s.label)),
+  isTopLevel: true,
 }));
+
+// Subsections come from the manual-dispatch probe workflow
+// (.github/workflows/probe-subsections.yml). Empty array until first dispatch.
+// Filter out any subsection whose URL is already a top-level entry — they'd
+// resolve the same anyway, and this avoids double-counting in scoring.
+const TOP_LEVEL_URLS = new Set(RULES_SECTIONS.map((s) => s.url));
+const SUBSECTION_KEYWORDS = (rulesSubsections?.links || [])
+  .filter((s) => s.url && s.label && !TOP_LEVEL_URLS.has(s.url))
+  .map((s) => ({
+    label: s.label,
+    url: s.url,
+    tokens: new Set(tokenize(s.label)),
+    isTopLevel: false,
+  }));
+
+function scoreCandidate(candidate, qTokens) {
+  let score = 0;
+  for (const t of qTokens) {
+    if (candidate.tokens.has(t)) score += 3;
+    else if ([...candidate.tokens].some((st) => st.includes(t) || t.includes(st))) score += 1;
+  }
+  return score;
+}
+
+// Union of every token that appears in any top-level section's label. Used to
+// decide whether a subsection's match is "specific" (token unique to it) or
+// just shared with a top-level — only specific matches earn the tiebreak bonus.
+const TOP_LEVEL_TOKEN_UNION = new Set();
+for (const s of SECTION_KEYWORDS) for (const t of s.tokens) TOP_LEVEL_TOKEN_UNION.add(t);
 
 function pickSectionFromQuestion(text) {
   const qTokens = tokenize(text);
   if (qTokens.length === 0) return null;
   let best = null;
   let bestScore = 0;
-  for (const s of SECTION_KEYWORDS) {
-    let score = 0;
-    for (const t of qTokens) {
-      if (s.tokens.has(t)) score += 3;
-      else if ([...s.tokens].some((st) => st.includes(t) || t.includes(st))) score += 1;
+  // Iterate top-level first so they win exact ties with subsections.
+  for (const s of [...SECTION_KEYWORDS, ...SUBSECTION_KEYWORDS]) {
+    const raw = scoreCandidate(s, qTokens);
+    if (raw < 3) continue;
+    let bonus = 0;
+    if (!s.isTopLevel) {
+      // +1 only when the question contains a token that's specific to this
+      // subsection — i.e., it matches the subsection's label and is NOT in
+      // any top-level section's tokens. Without this check, generic queries
+      // ("tell me about ships") get incorrectly routed to a specific
+      // subsection ("Capital Ships") just by the subsection bonus.
+      const hasSpecific = qTokens.some(
+        (t) => s.tokens.has(t) && !TOP_LEVEL_TOKEN_UNION.has(t),
+      );
+      if (hasSpecific) bonus = 1;
     }
+    const score = raw + bonus;
     if (score > bestScore) {
       bestScore = score;
       best = s;
     }
   }
-  return bestScore >= 3 ? { label: best.label, url: best.url, score: bestScore } : null;
+  return best ? { label: best.label, url: best.url, score: bestScore } : null;
 }
 
 const clientIp = (req) => {
@@ -129,9 +172,13 @@ function looksLikeAnubisChallenge(text) {
   );
 }
 
-function getCachedSectionText(label) {
+function getCachedSectionText(label, url) {
   const entry = rulesCache?.sections?.[label];
   if (!entry || typeof entry.text !== "string" || entry.text.length < 200) return "";
+  // If the caller specified a URL, only return cached text when the cache
+  // entry was for the same URL — subsection labels can collide with top-level
+  // labels but point to different sub-pages.
+  if (url && entry.url && entry.url !== url) return "";
   if (looksLikeAnubisChallenge(entry.text)) {
     console.warn("cache entry for", label, "looks like an Anubis challenge — treating as miss");
     return "";
@@ -174,7 +221,7 @@ async function resolveSectionContent(section) {
   if (!section?.label || !section?.url) {
     return { source: "none", text: "" };
   }
-  const cached = getCachedSectionText(section.label);
+  const cached = getCachedSectionText(section.label, section.url);
   if (cached) return { source: "cache", text: cached };
   const live = await fetchSectionTextLive(section.url);
   if (live) return { source: "live-fetch", text: live };

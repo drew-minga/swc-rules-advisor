@@ -10,7 +10,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "scrape": "node scripts/scrape-rules.js"
+    "scrape": "node scripts/scrape-rules.js",
+    "probe": "node scripts/probe-subsections.js"
   },
   "dependencies": {
     "@upstash/ratelimit": "^2.0.8",
