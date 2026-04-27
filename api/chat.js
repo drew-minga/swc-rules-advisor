@@ -26,7 +26,8 @@ WHEN ANSWERING:
 - Cite the rules section your answer comes from (URL or section name).
 - If the rule is complex, break it down step by step.
 - Keep answers focused and practical — players want to know what they can DO, not just theory.
-- It's fine — and expected — to admit uncertainty when the source material is thin.`;
+- It's fine — and expected — to admit uncertainty when the source material is thin.
+- Do NOT narrate your research process. Never write "Let me search…", "Let me try…", "I'll look this up…", "Based on my searches…", or similar preamble. Open with the answer (or with a clean "I couldn't find this in the rules I can access — please check [URL]."). The user only sees the final response, so meta-commentary about your tool use is noise.`;
 
 const MAX_BODY_BYTES = 20_000;
 const MAX_MESSAGES = 40;
@@ -298,15 +299,33 @@ export default async function handler(req, res) {
   if (!upstream.ok) {
     const detail = await upstream.text().catch(() => "");
     console.error("Anthropic error", upstream.status, detail);
-    return json(res, 502, { error: "The rules database returned an error." });
+    const errorMsg =
+      upstream.status === 429
+        ? "Upstream rate limit reached — try again in a minute."
+        : upstream.status >= 500
+        ? `Upstream error (${upstream.status}) — please try again.`
+        : `Upstream rejected the request (${upstream.status}).`;
+    return json(res, 502, { error: errorMsg, upstreamStatus: upstream.status });
   }
 
   const data = await upstream.json();
-  let reply = "";
-  if (Array.isArray(data.content)) {
-    for (const block of data.content) {
-      if (block.type === "text" && typeof block.text === "string") reply += block.text;
+  // Anthropic's response interleaves intermediate text with tool_use/tool_result
+  // blocks (e.g., "Let me search...", server_tool_use, web_search_tool_result,
+  // "Based on my searches..."). Only the text blocks AFTER the last tool block
+  // are the final answer; earlier text is the model's research narration and
+  // would otherwise leak into the user-facing reply.
+  const blocks = Array.isArray(data.content) ? data.content : [];
+  let lastNonTextIdx = -1;
+  for (let i = blocks.length - 1; i >= 0; i--) {
+    if (blocks[i].type !== "text") {
+      lastNonTextIdx = i;
+      break;
     }
+  }
+  let reply = "";
+  for (let i = lastNonTextIdx + 1; i < blocks.length; i++) {
+    const b = blocks[i];
+    if (b.type === "text" && typeof b.text === "string") reply += b.text;
   }
   if (!reply) reply = "I wasn't able to retrieve an answer. Please try rephrasing your question.";
 
