@@ -1,4 +1,761 @@
 {
-  "probedAt": null,
-  "links": []
+  "probedAt": "2026-04-27T02:36:18.508Z",
+  "links": [
+    {
+      "label": "Character Creation",
+      "url": "https://www.swcombine.com/rules/?Character_Creation"
+    },
+    {
+      "label": "Character Templates",
+      "url": "https://www.swcombine.com/rules/?Character_Templates"
+    },
+    {
+      "label": "Movement",
+      "url": "https://www.swcombine.com/rules/?Movement"
+    },
+    {
+      "label": "Crewlist",
+      "url": "https://www.swcombine.com/rules/?Crewlist"
+    },
+    {
+      "label": "Docking",
+      "url": "https://www.swcombine.com/rules/?Docking"
+    },
+    {
+      "label": "NPC Player Transport",
+      "url": "https://www.swcombine.com/rules/?NPC_Player_Transport"
+    },
+    {
+      "label": "NPC Cargo Transport",
+      "url": "https://www.swcombine.com/rules/?NPC_Cargo_Transport"
+    },
+    {
+      "label": "Rooms",
+      "url": "https://www.swcombine.com/rules/?Rooms"
+    },
+    {
+      "label": "Locks and Keys",
+      "url": "https://www.swcombine.com/rules/?Locks_and_Keys"
+    },
+    {
+      "label": "Guard Posts",
+      "url": "https://www.swcombine.com/rules/?Guard_Posts"
+    },
+    {
+      "label": "Nav Comp",
+      "url": "https://www.swcombine.com/rules/?Nav_Comp"
+    },
+    {
+      "label": "Vision",
+      "url": "https://www.swcombine.com/rules/?Vision"
+    },
+    {
+      "label": "Identify Friend/Foe",
+      "url": "https://www.swcombine.com/rules/?Identify_Friend;Foe"
+    },
+    {
+      "label": "NPCs",
+      "url": "https://www.swcombine.com/rules/?NPCs"
+    },
+    {
+      "label": "Parties",
+      "url": "https://www.swcombine.com/rules/?Parties"
+    },
+    {
+      "label": "Tutorial NPCs",
+      "url": "https://www.swcombine.com/rules/?Tutorial_NPCs"
+    },
+    {
+      "label": "Military NPCs",
+      "url": "https://www.swcombine.com/rules/?Military_NPCs"
+    },
+    {
+      "label": "Civil NPCs",
+      "url": "https://www.swcombine.com/rules/?Civil_NPCs"
+    },
+    {
+      "label": "Scripts",
+      "url": "https://www.swcombine.com/rules/?Scripts"
+    },
+    {
+      "label": "Communication",
+      "url": "https://www.swcombine.com/rules/?Communication"
+    },
+    {
+      "label": "GNS",
+      "url": "https://www.swcombine.com/rules/?GNS"
+    },
+    {
+      "label": "Spying and Sabotage",
+      "url": "https://www.swcombine.com/rules/?Spying_and_Sabotage"
+    },
+    {
+      "label": "Deployment",
+      "url": "https://www.swcombine.com/rules/?Deployment"
+    },
+    {
+      "label": "Life and Death",
+      "url": "https://www.swcombine.com/rules/?Life_and_Death"
+    },
+    {
+      "label": "Character Skills",
+      "url": "https://www.swcombine.com/rules/?Character_Skills"
+    },
+    {
+      "label": "Races",
+      "url": "https://www.swcombine.com/rules/?Races"
+    },
+    {
+      "label": "The Force",
+      "url": "https://www.swcombine.com/rules/?The_Force"
+    },
+    {
+      "label": "Combat Slot",
+      "url": "https://www.swcombine.com/rules/?Combat_Slot"
+    },
+    {
+      "label": "Passive Slot",
+      "url": "https://www.swcombine.com/rules/?Passive_Slot"
+    },
+    {
+      "label": "Activate Slot",
+      "url": "https://www.swcombine.com/rules/?Activate_Slot"
+    },
+    {
+      "label": "Active Skills",
+      "url": "https://www.swcombine.com/rules/?Active_Skills"
+    },
+    {
+      "label": "Training",
+      "url": "https://www.swcombine.com/rules/?Training"
+    },
+    {
+      "label": "Holocrons",
+      "url": "https://www.swcombine.com/rules/?Holocrons"
+    },
+    {
+      "label": "Factions",
+      "url": "https://www.swcombine.com/rules/?Factions"
+    },
+    {
+      "label": "Faction Creation",
+      "url": "https://www.swcombine.com/rules/?Faction_Creation"
+    },
+    {
+      "label": "Faction Modules",
+      "url": "https://www.swcombine.com/rules/?Faction_Modules"
+    },
+    {
+      "label": "Sub-factions",
+      "url": "https://www.swcombine.com/rules/?Sub-factions"
+    },
+    {
+      "label": "Faction Ownership",
+      "url": "https://www.swcombine.com/rules/?Faction_Ownership"
+    },
+    {
+      "label": "Advisory Panels",
+      "url": "https://www.swcombine.com/rules/?Advisory_Panels"
+    },
+    {
+      "label": "Alliances",
+      "url": "https://www.swcombine.com/rules/?Alliances"
+    },
+    {
+      "label": "Privileges",
+      "url": "https://www.swcombine.com/rules/?Privileges"
+    },
+    {
+      "label": "Budgets",
+      "url": "https://www.swcombine.com/rules/?Budgets"
+    },
+    {
+      "label": "Ground Combat",
+      "url": "https://www.swcombine.com/rules/?Ground_Combat"
+    },
+    {
+      "label": "Ground Bandits",
+      "url": "https://www.swcombine.com/rules/?Ground_Bandits"
+    },
+    {
+      "label": "Bandit Fitouts",
+      "url": "https://www.swcombine.com/rules/?Bandit_Fitouts"
+    },
+    {
+      "label": "Demolitions",
+      "url": "https://www.swcombine.com/rules/?Demolitions"
+    },
+    {
+      "label": "Remote Training",
+      "url": "https://www.swcombine.com/rules/?Remote_Training"
+    },
+    {
+      "label": "Poison",
+      "url": "https://www.swcombine.com/rules/?Poison"
+    },
+    {
+      "label": "Confusion",
+      "url": "https://www.swcombine.com/rules/?Confusion"
+    },
+    {
+      "label": "Garrisons",
+      "url": "https://www.swcombine.com/rules/?Garrisons"
+    },
+    {
+      "label": "Infantry Garrisons",
+      "url": "https://www.swcombine.com/rules/?Infantry_Garrisons"
+    },
+    {
+      "label": "Ship Garrisons",
+      "url": "https://www.swcombine.com/rules/?Ship_Garrisons"
+    },
+    {
+      "label": "Space Combat",
+      "url": "https://www.swcombine.com/rules/?Space_Combat"
+    },
+    {
+      "label": "Space Bandits",
+      "url": "https://www.swcombine.com/rules/?Space_Bandits"
+    },
+    {
+      "label": "Showdowns",
+      "url": "https://www.swcombine.com/rules/?Showdowns"
+    },
+    {
+      "label": "Shields",
+      "url": "https://www.swcombine.com/rules/?Shields"
+    },
+    {
+      "label": "Medicine",
+      "url": "https://www.swcombine.com/rules/?Medicine"
+    },
+    {
+      "label": "Cybernetic Operations",
+      "url": "https://www.swcombine.com/rules/?Cybernetic_Operations"
+    },
+    {
+      "label": "Squads",
+      "url": "https://www.swcombine.com/rules/?Squads"
+    },
+    {
+      "label": "Squad Training",
+      "url": "https://www.swcombine.com/rules/?Squad_Training"
+    },
+    {
+      "label": "Facilities",
+      "url": "https://www.swcombine.com/rules/?Facilities"
+    },
+    {
+      "label": "1x1",
+      "url": "https://www.swcombine.com/rules/?1x1"
+    },
+    {
+      "label": "1x3",
+      "url": "https://www.swcombine.com/rules/?1x3"
+    },
+    {
+      "label": "1x5",
+      "url": "https://www.swcombine.com/rules/?1x5"
+    },
+    {
+      "label": "1x10",
+      "url": "https://www.swcombine.com/rules/?1x10"
+    },
+    {
+      "label": "1x19",
+      "url": "https://www.swcombine.com/rules/?1x19"
+    },
+    {
+      "label": "3x3",
+      "url": "https://www.swcombine.com/rules/?3x3"
+    },
+    {
+      "label": "3x5",
+      "url": "https://www.swcombine.com/rules/?3x5"
+    },
+    {
+      "label": "4x7",
+      "url": "https://www.swcombine.com/rules/?4x7"
+    },
+    {
+      "label": "4x8",
+      "url": "https://www.swcombine.com/rules/?4x8"
+    },
+    {
+      "label": "5x5",
+      "url": "https://www.swcombine.com/rules/?5x5"
+    },
+    {
+      "label": "6x6",
+      "url": "https://www.swcombine.com/rules/?6x6"
+    },
+    {
+      "label": "7x7",
+      "url": "https://www.swcombine.com/rules/?7x7"
+    },
+    {
+      "label": "8x8",
+      "url": "https://www.swcombine.com/rules/?8x8"
+    },
+    {
+      "label": "9x9",
+      "url": "https://www.swcombine.com/rules/?9x9"
+    },
+    {
+      "label": "10x10",
+      "url": "https://www.swcombine.com/rules/?10x10"
+    },
+    {
+      "label": "20x20",
+      "url": "https://www.swcombine.com/rules/?20x20"
+    },
+    {
+      "label": "Facility Construction",
+      "url": "https://www.swcombine.com/rules/?Facility_Construction&ref=Facilities"
+    },
+    {
+      "label": "Facility Income",
+      "url": "https://www.swcombine.com/rules/?Facility_Income&ref=Facilities"
+    },
+    {
+      "label": "City Designer",
+      "url": "https://www.swcombine.com/rules/?City_Designer"
+    },
+    {
+      "label": "Space Stations",
+      "url": "https://www.swcombine.com/rules/?Space_Stations"
+    },
+    {
+      "label": "Unique Stations",
+      "url": "https://www.swcombine.com/rules/?Unique_Stations"
+    },
+    {
+      "label": "Station Construction",
+      "url": "https://www.swcombine.com/rules/?Station_Construction&ref=Space_Stations"
+    },
+    {
+      "label": "System Designer",
+      "url": "https://www.swcombine.com/rules/?System_Designer"
+    },
+    {
+      "label": "Ships",
+      "url": "https://www.swcombine.com/rules/?Ships"
+    },
+    {
+      "label": "Super Capitals",
+      "url": "https://www.swcombine.com/rules/?Super_Capitals"
+    },
+    {
+      "label": "Capital Ships",
+      "url": "https://www.swcombine.com/rules/?Capital_Ships"
+    },
+    {
+      "label": "Frigates",
+      "url": "https://www.swcombine.com/rules/?Frigates"
+    },
+    {
+      "label": "Corvettes",
+      "url": "https://www.swcombine.com/rules/?Corvettes"
+    },
+    {
+      "label": "Heavy Freighters",
+      "url": "https://www.swcombine.com/rules/?Heavy_Freighters"
+    },
+    {
+      "label": "Light Freighters",
+      "url": "https://www.swcombine.com/rules/?Light_Freighters"
+    },
+    {
+      "label": "Gunboats",
+      "url": "https://www.swcombine.com/rules/?Gunboats"
+    },
+    {
+      "label": "Bombers",
+      "url": "https://www.swcombine.com/rules/?Bombers"
+    },
+    {
+      "label": "Fighters",
+      "url": "https://www.swcombine.com/rules/?Fighters"
+    },
+    {
+      "label": "Satellites",
+      "url": "https://www.swcombine.com/rules/?Satellites"
+    },
+    {
+      "label": "Cargo Containers",
+      "url": "https://www.swcombine.com/rules/?Cargo_Containers"
+    },
+    {
+      "label": "Debris",
+      "url": "https://www.swcombine.com/rules/?Debris"
+    },
+    {
+      "label": "Rare Ships",
+      "url": "https://www.swcombine.com/rules/?Rare_Ships"
+    },
+    {
+      "label": "CP Bonus Ships",
+      "url": "https://www.swcombine.com/rules/?CP_Bonus_Ships"
+    },
+    {
+      "label": "Vehicles",
+      "url": "https://www.swcombine.com/rules/?Vehicles"
+    },
+    {
+      "label": "Ground Vehicles",
+      "url": "https://www.swcombine.com/rules/?Ground_Vehicles"
+    },
+    {
+      "label": "Speeders",
+      "url": "https://www.swcombine.com/rules/?Speeders"
+    },
+    {
+      "label": "Barges",
+      "url": "https://www.swcombine.com/rules/?Barges"
+    },
+    {
+      "label": "Boats and Submarines",
+      "url": "https://www.swcombine.com/rules/?Boats_and_Submarines"
+    },
+    {
+      "label": "Wrecks",
+      "url": "https://www.swcombine.com/rules/?Wrecks"
+    },
+    {
+      "label": "CP Bonus Vehicles",
+      "url": "https://www.swcombine.com/rules/?CP_Bonus_Vehicles"
+    },
+    {
+      "label": "Rare Vehicles",
+      "url": "https://www.swcombine.com/rules/?Rare_Vehicles"
+    },
+    {
+      "label": "Droids",
+      "url": "https://www.swcombine.com/rules/?Droids"
+    },
+    {
+      "label": "Astromech",
+      "url": "https://www.swcombine.com/rules/?Astromech"
+    },
+    {
+      "label": "Military",
+      "url": "https://www.swcombine.com/rules/?Military"
+    },
+    {
+      "label": "Protocol",
+      "url": "https://www.swcombine.com/rules/?Protocol"
+    },
+    {
+      "label": "Medical",
+      "url": "https://www.swcombine.com/rules/?Medical"
+    },
+    {
+      "label": "Labour",
+      "url": "https://www.swcombine.com/rules/?Labour"
+    },
+    {
+      "label": "Security",
+      "url": "https://www.swcombine.com/rules/?Security"
+    },
+    {
+      "label": "Power",
+      "url": "https://www.swcombine.com/rules/?Power"
+    },
+    {
+      "label": "CP Bonus Droids",
+      "url": "https://www.swcombine.com/rules/?CP_Bonus_Droids"
+    },
+    {
+      "label": "Rare Droids",
+      "url": "https://www.swcombine.com/rules/?Rare_Droids"
+    },
+    {
+      "label": "Items",
+      "url": "https://www.swcombine.com/rules/?Items"
+    },
+    {
+      "label": "Equipping NPCs",
+      "url": "https://www.swcombine.com/rules/?Equipping_NPCs"
+    },
+    {
+      "label": "Survival",
+      "url": "https://www.swcombine.com/rules/?Survival"
+    },
+    {
+      "label": "Tools",
+      "url": "https://www.swcombine.com/rules/?Tools"
+    },
+    {
+      "label": "Storage",
+      "url": "https://www.swcombine.com/rules/?Storage"
+    },
+    {
+      "label": "Clothing",
+      "url": "https://www.swcombine.com/rules/?Clothing"
+    },
+    {
+      "label": "Armour",
+      "url": "https://www.swcombine.com/rules/?Armour"
+    },
+    {
+      "label": "Computers",
+      "url": "https://www.swcombine.com/rules/?Computers"
+    },
+    {
+      "label": "Medical Items",
+      "url": "https://www.swcombine.com/rules/?Medical_Items"
+    },
+    {
+      "label": "Drugs",
+      "url": "https://www.swcombine.com/rules/?Drugs"
+    },
+    {
+      "label": "Cybernetics",
+      "url": "https://www.swcombine.com/rules/?Cybernetics"
+    },
+    {
+      "label": "Trophy",
+      "url": "https://www.swcombine.com/rules/?Trophy"
+    },
+    {
+      "label": "Lightsaber Parts",
+      "url": "https://www.swcombine.com/rules/?Lightsaber_Parts"
+    },
+    {
+      "label": "Rare Items",
+      "url": "https://www.swcombine.com/rules/?Rare_Items"
+    },
+    {
+      "label": "Personal Weapons",
+      "url": "https://www.swcombine.com/rules/?Personal_Weapons"
+    },
+    {
+      "label": "Projectile",
+      "url": "https://www.swcombine.com/rules/?Projectile"
+    },
+    {
+      "label": "Heavy Projectile",
+      "url": "https://www.swcombine.com/rules/?Heavy_Projectile"
+    },
+    {
+      "label": "Non-Projectile",
+      "url": "https://www.swcombine.com/rules/?Non-Projectile"
+    },
+    {
+      "label": "Explosives",
+      "url": "https://www.swcombine.com/rules/?Explosives"
+    },
+    {
+      "label": "Mounted Weapons",
+      "url": "https://www.swcombine.com/rules/?Mounted_Weapons"
+    },
+    {
+      "label": "Planetary Weapons",
+      "url": "https://www.swcombine.com/rules/?Planetary_Weapons"
+    },
+    {
+      "label": "Datacards",
+      "url": "https://www.swcombine.com/rules/?Datacards"
+    },
+    {
+      "label": "Marketplace",
+      "url": "https://www.swcombine.com/rules/?Marketplace"
+    },
+    {
+      "label": "Shops",
+      "url": "https://www.swcombine.com/rules/?Shops"
+    },
+    {
+      "label": "Vendors",
+      "url": "https://www.swcombine.com/rules/?Vendors"
+    },
+    {
+      "label": "Economy",
+      "url": "https://www.swcombine.com/rules/?Economy"
+    },
+    {
+      "label": "Mining",
+      "url": "https://www.swcombine.com/rules/?Mining"
+    },
+    {
+      "label": "Asteroid Mining",
+      "url": "https://www.swcombine.com/rules/?Asteroid_Mining"
+    },
+    {
+      "label": "Asteroid Mining Depots",
+      "url": "https://www.swcombine.com/rules/?Asteroid_Mining_Depots"
+    },
+    {
+      "label": "Recycling",
+      "url": "https://www.swcombine.com/rules/?Recycling"
+    },
+    {
+      "label": "Bacta Creation",
+      "url": "https://www.swcombine.com/rules/?Bacta_Creation"
+    },
+    {
+      "label": "Facility Income",
+      "url": "https://www.swcombine.com/rules/?Facility_Income"
+    },
+    {
+      "label": "Planetary Economy",
+      "url": "https://www.swcombine.com/rules/?Planetary_Economy"
+    },
+    {
+      "label": "Governments",
+      "url": "https://www.swcombine.com/rules/?Governments"
+    },
+    {
+      "label": "Missions and Quests",
+      "url": "https://www.swcombine.com/rules/?Missions_and_Quests"
+    },
+    {
+      "label": "Bounty Hunting",
+      "url": "https://www.swcombine.com/rules/?Bounty_Hunting"
+    },
+    {
+      "label": "Beskar Crafting",
+      "url": "https://www.swcombine.com/rules/?Beskar_Crafting"
+    },
+    {
+      "label": "Production",
+      "url": "https://www.swcombine.com/rules/?Production"
+    },
+    {
+      "label": "Facility Construction",
+      "url": "https://www.swcombine.com/rules/?Facility_Construction"
+    },
+    {
+      "label": "Station Construction",
+      "url": "https://www.swcombine.com/rules/?Station_Construction"
+    },
+    {
+      "label": "Material Equations",
+      "url": "https://www.swcombine.com/rules/?Material_Equations"
+    },
+    {
+      "label": "Repair",
+      "url": "https://www.swcombine.com/rules/?Repair"
+    },
+    {
+      "label": "Field Repairs",
+      "url": "https://www.swcombine.com/rules/?Field_Repairs"
+    },
+    {
+      "label": "Research",
+      "url": "https://www.swcombine.com/rules/?Research"
+    },
+    {
+      "label": "Components",
+      "url": "https://www.swcombine.com/rules/?Components"
+    },
+    {
+      "label": "Galaxy Map",
+      "url": "https://www.swcombine.com/rules/?Galaxy_Map"
+    },
+    {
+      "label": "Search",
+      "url": "https://www.swcombine.com/rules/?Search"
+    },
+    {
+      "label": "Political Map",
+      "url": "https://www.swcombine.com/rules/?Political_Map"
+    },
+    {
+      "label": "Darkness Map",
+      "url": "https://www.swcombine.com/rules/?Darkness_Map"
+    },
+    {
+      "label": "Hyperlane Map",
+      "url": "https://www.swcombine.com/rules/?Hyperlane_Map"
+    },
+    {
+      "label": "Planetary Grids",
+      "url": "https://www.swcombine.com/rules/?Planetary_Grids"
+    },
+    {
+      "label": "Environments",
+      "url": "https://www.swcombine.com/rules/?Environments"
+    },
+    {
+      "label": "Cities",
+      "url": "https://www.swcombine.com/rules/?Cities"
+    },
+    {
+      "label": "Creatures",
+      "url": "https://www.swcombine.com/rules/?Creatures"
+    },
+    {
+      "label": "Tiny",
+      "url": "https://www.swcombine.com/rules/?Tiny"
+    },
+    {
+      "label": "Small",
+      "url": "https://www.swcombine.com/rules/?Small"
+    },
+    {
+      "label": "Medium",
+      "url": "https://www.swcombine.com/rules/?Medium"
+    },
+    {
+      "label": "Large",
+      "url": "https://www.swcombine.com/rules/?Large"
+    },
+    {
+      "label": "Huge",
+      "url": "https://www.swcombine.com/rules/?Huge"
+    },
+    {
+      "label": "Colossal",
+      "url": "https://www.swcombine.com/rules/?Colossal"
+    },
+    {
+      "label": "CP Bonus Creatures",
+      "url": "https://www.swcombine.com/rules/?CP_Bonus_Creatures"
+    },
+    {
+      "label": "Asteroid Fields",
+      "url": "https://www.swcombine.com/rules/?Asteroid_Fields"
+    },
+    {
+      "label": "Hyperlanes",
+      "url": "https://www.swcombine.com/rules/?Hyperlanes"
+    },
+    {
+      "label": "Timeline",
+      "url": "https://www.swcombine.com/rules/?Timeline"
+    },
+    {
+      "label": "Timeframe",
+      "url": "https://www.swcombine.com/rules/?Timeframe"
+    },
+    {
+      "label": "Counters",
+      "url": "https://www.swcombine.com/rules/?Counters"
+    },
+    {
+      "label": "Bugs",
+      "url": "https://www.swcombine.com/rules/?Bugs"
+    },
+    {
+      "label": "Timer Status",
+      "url": "https://www.swcombine.com/rules/?Timer_Status"
+    },
+    {
+      "label": "Combine Points",
+      "url": "https://www.swcombine.com/rules/?Combine_Points"
+    },
+    {
+      "label": "Custom Images",
+      "url": "https://www.swcombine.com/rules/?Custom_Images"
+    },
+    {
+      "label": "Room Custom Images",
+      "url": "https://www.swcombine.com/rules/?Room_Custom_Images"
+    },
+    {
+      "label": "Custom NPCs",
+      "url": "https://www.swcombine.com/rules/?Custom_NPCs"
+    }
+  ]
 }
