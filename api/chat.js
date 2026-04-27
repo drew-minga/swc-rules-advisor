@@ -386,6 +386,10 @@ export default async function handler(req, res) {
     cachedSectionsAvailable: Object.keys(rulesCache?.sections || {}).length,
     cacheGeneratedAt: rulesCache?.generatedAt || null,
     rateLimitActive: Boolean(ratelimit),
+    // Anthropic usage block: input/output token counts for this turn. Useful
+    // for spotting expensive queries in browser dev tools without standing up
+    // a logging service. Includes server_tool_use counts for web_search rounds.
+    usage: data.usage || null,
   };
 
   return json(res, 200, { reply, _debug: debug });
