@@ -1,7 +1,7 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import rulesCache from "./rules-cache.json" with { type: "json" };
-import rulesSubsections from "./rules-subsections.json" with { type: "json" };
+import rulesSubsections from "../src/data/rules-subsections.json" with { type: "json" };
 import { RULES_SECTIONS } from "../src/data/rules-sections.js";
 
 const SYSTEM_PROMPT = `You are a knowledgeable assistant for the Star Wars Combine (swcombine.com), a browser-based Star Wars MMORPG.

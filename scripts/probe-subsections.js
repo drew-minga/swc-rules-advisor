@@ -14,7 +14,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const OUTPUT_PATH = join(__dirname, "..", "api", "rules-subsections.json");
+const OUTPUT_PATH = join(__dirname, "..", "src", "data", "rules-subsections.json");
 
 const INDEX_URL = "https://www.swcombine.com/rules/";
 const NAV_TIMEOUT_MS = 60_000;

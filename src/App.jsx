@@ -2,6 +2,16 @@ import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { RULES_SECTIONS } from "./data/rules-sections.js";
+import rulesSubsections from "./data/rules-subsections.json";
+
+// Subsection labels filtered against the top-level URL set so the picker
+// doesn't show duplicates (the probe captures top-level entries too).
+const TOP_LEVEL_URLS = new Set(RULES_SECTIONS.map((s) => s.url));
+const SUBSECTIONS = (rulesSubsections?.links || [])
+  .filter((s) => s.url && s.label && !TOP_LEVEL_URLS.has(s.url))
+  .map((s) => ({ label: s.label, url: s.url, isSub: true }));
+const TOP_LEVEL_OPTIONS = RULES_SECTIONS.map((s) => ({ ...s, isSub: false }));
+const ALL_OPTIONS = [...TOP_LEVEL_OPTIONS, ...SUBSECTIONS];
 
 // Markdown renderer for assistant replies. Disallow raw HTML (skipHtml) and
 // override link behavior to open externally in a new tab — the model's replies
@@ -57,6 +67,7 @@ export default function SWCombineAdvisor() {
   const [loading, setLoading] = useState(false);
   const [selectedSection, setSelectedSection] = useState(null);
   const [sectionOpen, setSectionOpen] = useState(false);
+  const [sectionQuery, setSectionQuery] = useState("");
   // Index of the most recently copied message; reset to null after the
   // confirmation lingers briefly. Indexed instead of keyed-by-id since
   // messages don't have stable ids.
@@ -147,6 +158,7 @@ export default function SWCombineAdvisor() {
     setMessages([INITIAL_GREETING]);
     setSelectedSection(null);
     setSectionOpen(false);
+    setSectionQuery("");
     setInput("");
     if (textareaRef.current) textareaRef.current.style.height = "auto";
     textareaRef.current?.focus();
@@ -188,6 +200,9 @@ export default function SWCombineAdvisor() {
         .section-pill { cursor: pointer; transition: all 0.18s; }
         .section-pill:hover { border-color: rgba(255,180,0,0.55) !important; color: #ffb400 !important; background: rgba(255,180,0,0.1) !important; }
         .section-pill.on  { border-color: #ffb400 !important; color: #ffb400 !important; background: rgba(255,180,0,0.18) !important; }
+        .section-pill.sub { border-style: dashed !important; }
+
+        .section-search:focus { outline: none; border-color: rgba(255,180,0,0.4) !important; }
 
         .send-btn { transition: all 0.18s; }
         .send-btn:hover:not(:disabled) { background: #ffb400 !important; color: #0a0c10 !important; transform: scale(1.04); }
@@ -375,35 +390,70 @@ export default function SWCombineAdvisor() {
               </div>
             </div>
 
-            {sectionOpen && (
-              <div style={{ marginTop: 11, display: "flex", flexWrap: "wrap", gap: 6 }}>
-                {[{ label: "All Sections", url: null }, ...RULES_SECTIONS].map((s) => {
-                  const active =
-                    s.url === null ? !selectedSection : selectedSection?.label === s.label;
-                  return (
-                    <button
-                      key={s.label}
-                      className={`section-pill${active ? " on" : ""}`}
-                      onClick={() => {
-                        setSelectedSection(s.url ? s : null);
-                        setSectionOpen(false);
-                      }}
-                      style={{
-                        padding: "4px 11px",
-                        fontSize: 11,
-                        borderRadius: 20,
-                        border: "1px solid rgba(255,255,255,0.12)",
-                        background: "transparent",
-                        color: "rgba(255,255,255,0.42)",
-                        fontFamily: "'Exo 2',sans-serif",
-                      }}
-                    >
-                      {s.label}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+            {sectionOpen && (() => {
+              // Empty query → show top-level only (compact, scannable). Non-empty
+              // query → search across both top-level and subsections, capped to
+              // 40 results so the panel doesn't become a wall.
+              const q = sectionQuery.trim().toLowerCase();
+              const filtered = q
+                ? ALL_OPTIONS.filter((s) => s.label.toLowerCase().includes(q)).slice(0, 40)
+                : TOP_LEVEL_OPTIONS;
+              return (
+                <div style={{ marginTop: 11 }}>
+                  <input
+                    type="text"
+                    value={sectionQuery}
+                    onChange={(e) => setSectionQuery(e.target.value)}
+                    placeholder={`Search ${ALL_OPTIONS.length} sections + subsections…`}
+                    className="section-search"
+                    style={{
+                      width: "100%",
+                      background: "rgba(0,0,0,0.25)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      borderRadius: 6,
+                      color: "rgba(218,228,244,0.9)",
+                      fontSize: 12,
+                      fontFamily: "'Exo 2',sans-serif",
+                      padding: "6px 10px",
+                      marginBottom: 9,
+                    }}
+                  />
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, maxHeight: 220, overflowY: "auto" }}>
+                    {[{ label: "All Sections", url: null, isSub: false }, ...filtered].map((s) => {
+                      const active =
+                        s.url === null ? !selectedSection : selectedSection?.url === s.url;
+                      return (
+                        <button
+                          key={s.url ?? "__all__"}
+                          className={`section-pill${active ? " on" : ""}${s.isSub ? " sub" : ""}`}
+                          onClick={() => {
+                            setSelectedSection(s.url ? { label: s.label, url: s.url } : null);
+                            setSectionOpen(false);
+                            setSectionQuery("");
+                          }}
+                          style={{
+                            padding: "4px 11px",
+                            fontSize: 11,
+                            borderRadius: 20,
+                            border: "1px solid rgba(255,255,255,0.12)",
+                            background: "transparent",
+                            color: "rgba(255,255,255,0.42)",
+                            fontFamily: "'Exo 2',sans-serif",
+                          }}
+                        >
+                          {s.label}
+                        </button>
+                      );
+                    })}
+                    {q && filtered.length === 0 && (
+                      <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", padding: "4px 0" }}>
+                        No matches.
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Chat Window */}
