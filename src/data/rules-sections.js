@@ -4,6 +4,7 @@ export const RULES_SECTIONS = [
   { label: "Vision", url: "https://www.swcombine.com/rules/?Vision" },
   { label: "NPCs", url: "https://www.swcombine.com/rules/?NPCs" },
   { label: "Communication", url: "https://www.swcombine.com/rules/?Communication" },
+  { label: "Deployment", url: "https://www.swcombine.com/rules/?Deployment" },
   { label: "Life and Death", url: "https://www.swcombine.com/rules/?Life_and_Death" },
   { label: "Character Skills", url: "https://www.swcombine.com/rules/?Character_Skills" },
   { label: "Races", url: "https://www.swcombine.com/rules/?Races" },
