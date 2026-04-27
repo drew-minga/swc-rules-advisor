@@ -1,5 +1,14 @@
 import { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { RULES_SECTIONS } from "./data/rules-sections.js";
+
+// Markdown renderer for assistant replies. Disallow raw HTML (skipHtml) and
+// override link behavior to open externally in a new tab — the model's replies
+// regularly cite swcombine.com pages and we want them clickable but isolated.
+const markdownComponents = {
+  a: (props) => <a {...props} target="_blank" rel="noopener noreferrer" />,
+};
 
 const StarField = () => {
   const stars = useRef(
@@ -48,8 +57,22 @@ export default function SWCombineAdvisor() {
   const [loading, setLoading] = useState(false);
   const [selectedSection, setSelectedSection] = useState(null);
   const [sectionOpen, setSectionOpen] = useState(false);
+  // Index of the most recently copied message; reset to null after the
+  // confirmation lingers briefly. Indexed instead of keyed-by-id since
+  // messages don't have stable ids.
+  const [copiedIdx, setCopiedIdx] = useState(null);
   const bottomRef = useRef(null);
   const textareaRef = useRef(null);
+
+  const handleCopy = async (text, i) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedIdx(i);
+      setTimeout(() => setCopiedIdx((c) => (c === i ? null : c)), 1500);
+    } catch {
+      /* clipboard unavailable; quietly do nothing */
+    }
+  };
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -173,9 +196,80 @@ export default function SWCombineAdvisor() {
         .clr-btn { transition: all 0.18s; }
         .clr-btn:hover { color: #ff6b6b !important; border-color: rgba(255,107,107,0.4) !important; }
 
+        .copy-btn { transition: all 0.18s; }
+        .copy-btn:hover { color: #ffb400 !important; border-color: rgba(255,180,0,0.4) !important; }
+
         textarea:focus { outline: none; }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: rgba(255,180,0,0.25); border-radius: 2px; }
+
+        /* Markdown styles, scoped to assistant bubbles only. */
+        .advisor-md > :first-child { margin-top: 0; }
+        .advisor-md > :last-child  { margin-bottom: 0; }
+        .advisor-md p { margin: 0 0 8px; }
+        .advisor-md h1, .advisor-md h2, .advisor-md h3,
+        .advisor-md h4, .advisor-md h5, .advisor-md h6 {
+          font-family: 'Orbitron', monospace;
+          color: #ffb400;
+          letter-spacing: 1px;
+          margin: 12px 0 6px;
+          line-height: 1.3;
+        }
+        .advisor-md h1 { font-size: 16px; }
+        .advisor-md h2 { font-size: 14.5px; }
+        .advisor-md h3 { font-size: 13.5px; }
+        .advisor-md h4, .advisor-md h5, .advisor-md h6 { font-size: 13px; }
+        .advisor-md ul, .advisor-md ol { margin: 4px 0 8px 18px; padding: 0; }
+        .advisor-md li { margin: 2px 0; }
+        .advisor-md strong { color: rgba(255,218,150,1); font-weight: 600; }
+        .advisor-md em { color: rgba(255,218,150,0.85); }
+        .advisor-md a { color: #ffb400; text-decoration: underline; text-underline-offset: 2px; }
+        .advisor-md a:hover { color: #ffd166; }
+        .advisor-md code {
+          background: rgba(255,180,0,0.08);
+          border: 1px solid rgba(255,180,0,0.15);
+          padding: 1px 5px;
+          border-radius: 4px;
+          font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+          font-size: 12px;
+        }
+        .advisor-md pre {
+          background: rgba(0,0,0,0.35);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 6px;
+          padding: 10px 12px;
+          margin: 8px 0;
+          overflow-x: auto;
+          font-size: 12px;
+        }
+        .advisor-md pre code { background: none; border: none; padding: 0; }
+        .advisor-md blockquote {
+          border-left: 2px solid rgba(255,180,0,0.4);
+          margin: 8px 0;
+          padding: 2px 12px;
+          color: rgba(218,228,244,0.7);
+        }
+        .advisor-md table { border-collapse: collapse; margin: 8px 0; }
+        .advisor-md th, .advisor-md td {
+          border: 1px solid rgba(255,255,255,0.12);
+          padding: 4px 8px;
+          font-size: 12.5px;
+        }
+        .advisor-md hr {
+          border: none;
+          border-top: 1px solid rgba(255,255,255,0.08);
+          margin: 10px 0;
+        }
+
+        /* Mobile: prevent iOS Safari auto-zoom on focus by bumping the
+           textarea font size to 16px. Also enlarge interactive controls
+           slightly so they meet the 44px touch-target guideline. */
+        @media (max-width: 480px) {
+          .input-textarea { font-size: 16px !important; }
+          .send-btn, .clr-btn { height: 36px !important; }
+          .copy-btn { font-size: 10.5px !important; padding: 4px 10px !important; }
+          .section-pill { padding: 6px 12px !important; font-size: 12px !important; }
+        }
       `}</style>
 
       <div
@@ -318,7 +412,8 @@ export default function SWCombineAdvisor() {
               background: "rgba(5,9,17,0.88)",
               border: "1px solid rgba(255,180,0,0.14)",
               borderRadius: 10,
-              height: 430,
+              height: "min(430px, calc(100vh - 320px))",
+              minHeight: 280,
               overflowY: "auto",
               padding: "18px 18px",
               marginBottom: 11,
@@ -353,6 +448,7 @@ export default function SWCombineAdvisor() {
                   {msg.role === "user" ? "You" : "Rules Advisor"}
                 </div>
                 <div
+                  className={msg.role === "assistant" ? "advisor-md" : undefined}
                   style={{
                     maxWidth: "88%",
                     padding: "10px 13px",
@@ -372,11 +468,42 @@ export default function SWCombineAdvisor() {
                       msg.role === "user"
                         ? "rgba(255,218,90,0.95)"
                         : "rgba(218,228,244,0.9)",
-                    whiteSpace: "pre-wrap",
+                    whiteSpace: msg.role === "user" ? "pre-wrap" : "normal",
                   }}
                 >
-                  {msg.content}
+                  {msg.role === "assistant" ? (
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      skipHtml
+                      components={markdownComponents}
+                    >
+                      {msg.content}
+                    </ReactMarkdown>
+                  ) : (
+                    msg.content
+                  )}
                 </div>
+                {msg.role === "assistant" && i > 0 && (
+                  <button
+                    className="copy-btn"
+                    onClick={() => handleCopy(msg.content, i)}
+                    title="Copy reply (markdown)"
+                    style={{
+                      marginTop: 5,
+                      background: "transparent",
+                      border: "1px solid rgba(255,255,255,0.12)",
+                      color: "rgba(255,255,255,0.42)",
+                      borderRadius: 4,
+                      padding: "2px 8px",
+                      fontSize: 9.5,
+                      letterSpacing: 1.5,
+                      fontFamily: "'Orbitron',monospace",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {copiedIdx === i ? "COPIED" : "COPY"}
+                  </button>
+                )}
               </div>
             ))}
 
@@ -435,6 +562,7 @@ export default function SWCombineAdvisor() {
             }}
           >
             <textarea
+              className="input-textarea"
               ref={textareaRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
